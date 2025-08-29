@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Your Own Country Quiz</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwind-css@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -118,6 +118,22 @@
                 flex: 1 1 100%; /* Single item per row on small screens */
                 max-width: 100%;
             }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top: 4px solid #2563eb;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none; /* Hidden by default */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -382,6 +398,26 @@
                 </ul>
             </div>
 
+            <!-- New Image Generation Section -->
+            <div class="mt-12 pt-8 border-t-2 border-blue-300">
+                <h3 class="text-2xl font-bold text-center mb-6 question-title">🎨 Visualize Your Country! 🖼️</h3>
+                <p class="text-lg text-gray-700 text-center mb-6">Enter descriptive keywords to generate an image representing your new nation!</p>
+                <div class="mb-4">
+                    <label for="imagePrompt" class="block text-xl font-semibold text-gray-800 mb-3 question-title">Describe your country's visuals (e.g., "futuristic city with flying cars, lush green mountains, sunset"):</label>
+                    <textarea id="imagePrompt" class="input-field h-32" placeholder="A majestic castle on a cliff overlooking a sparkling ocean, with a vibrant market below."></textarea>
+                </div>
+                <div class="flex justify-center mt-6">
+                    <button id="generateImageBtn" class="btn-primary text-xl font-bold">Generate Image 📸</button>
+                </div>
+
+                <div id="image-container" class="mt-8 text-center">
+                    <div class="spinner" id="image-spinner"></div>
+                    <img id="generatedImage" class="max-w-full h-auto mx-auto rounded-lg shadow-lg" alt="Generated image of your country" style="display:none;">
+                    <p id="image-placeholder" class="text-gray-500 mt-4">Your generated image will appear here!</p>
+                </div>
+            </div>
+
+
             <div class="flex justify-center mt-8">
                 <button id="resetBtn" class="btn-secondary text-xl font-bold">Start Over ↩️</button>
             </div>
@@ -578,6 +614,14 @@
         const countryNameInput = document.getElementById('countryName');
         const resourceWarning = document.getElementById('resource-warning');
         const govEconQuestionsContainer = document.getElementById('gov-econ-questions');
+
+        // Image Generation Elements
+        const imagePromptTextArea = document.getElementById('imagePrompt');
+        const generateImageButton = document.getElementById('generateImageBtn');
+        const generatedImage = document.getElementById('generatedImage');
+        const imageSpinner = document.getElementById('image-spinner');
+        const imagePlaceholder = document.getElementById('image-placeholder');
+
 
         // Custom Message Box Elements
         const messageBox = document.getElementById('message-box');
@@ -838,7 +882,78 @@
             step2Section.classList.add('hidden');
             resultsSection.classList.remove('hidden');
             currentStep = 2;
+
+            // Pre-populate image prompt for convenience
+            imagePromptTextArea.value = `${countryNameInput.value}, a country with ${selectedCountryOptions.geography_pref.toLowerCase()} and a ${selectedCountryOptions.climate_pref.toLowerCase()} climate, emphasizing ${selectedCountryOptions.values_pref.toLowerCase()}.`;
         });
+
+        // --- Image Generation Logic ---
+        generateImageButton.addEventListener('click', async () => {
+            const userPrompt = imagePromptTextArea.value.trim();
+            if (!userPrompt) {
+                showMessage("Please enter a description for the image you want to generate.");
+                return;
+            }
+
+            imagePlaceholder.style.display = 'none';
+            generatedImage.style.display = 'none'; // Hide previous image
+            imageSpinner.style.display = 'block'; // Show spinner
+
+            const payload = {
+                instances: { prompt: userPrompt },
+                parameters: { "sampleCount": 1 }
+            };
+
+            const apiKey = ""; // Leave as-is, Canvas will provide it at runtime
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            let retries = 0;
+            const maxRetries = 5;
+            let delay = 1000; // 1 second
+
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429) { // Too Many Requests
+                            throw new Error('Rate limit exceeded. Retrying...');
+                        }
+                        const errorData = await response.json();
+                        throw new Error(`API error: ${errorData.error.message || response.statusText}`);
+                    }
+
+                    const result = await response.json();
+
+                    if (result.predictions && result.predictions.length > 0 && result.predictions[0].bytesBase64Encoded) {
+                        const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                        generatedImage.src = imageUrl;
+                        generatedImage.style.display = 'block';
+                        imageSpinner.style.display = 'none';
+                        break; // Exit loop on success
+                    } else {
+                        throw new Error('Unexpected API response structure or no image data.');
+                    }
+                } catch (error) {
+                    console.error("Image generation failed:", error);
+                    retries++;
+                    if (retries < maxRetries) {
+                        await new Promise(res => setTimeout(res, delay));
+                        delay *= 2; // Exponential backoff
+                    } else {
+                        imageSpinner.style.display = 'none';
+                        imagePlaceholder.textContent = 'Failed to generate image. Please try again or refine your description.';
+                        imagePlaceholder.style.display = 'block';
+                        showMessage(`Image generation failed after ${maxRetries} attempts. Error: ${error.message}`);
+                    }
+                }
+            }
+        });
+
 
         // --- Reset Logic ---
         resetBtn.addEventListener('click', () => {
@@ -853,6 +968,15 @@
             selectedGovEconAnswers = {};
             resourceWarning.classList.add('hidden');
             hideMessage(); // Hide any active messages
+
+            // Reset image generation section
+            imagePromptTextArea.value = '';
+            generatedImage.src = '';
+            generatedImage.style.display = 'none';
+            imageSpinner.style.display = 'none';
+            imagePlaceholder.textContent = 'Your generated image will appear here!';
+            imagePlaceholder.style.display = 'block';
+
 
             // Show step 1, hide others
             resultsSection.classList.add('hidden');
