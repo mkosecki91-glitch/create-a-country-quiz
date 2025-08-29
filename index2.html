@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Your Own Country Quiz</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e0f2fe; /* Light blue background */
+        }
+        .container {
+            max-width: 900px;
+        }
+        .card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn-primary {
+            background-color: #2563eb;
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: #1e40af;
+        }
+        .btn-secondary {
+            background-color: #6b7280;
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: background-color 0.2s;
+        }
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+        .input-field {
+            border: 1px solid #d1d5db;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+        }
+        .option-box {
+            border: 2px solid #d1d5db;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .option-box:hover, .option-box.selected {
+            border-color: #2563eb;
+            background-color: #eff6ff;
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed #e0e7ff;
+        }
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        .question-title {
+            color: #1a202c; /* Darker text for titles */
+        }
+        /* Custom Message Box Styles */
+        #message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #fee2e2;
+            color: #991b1b;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            border: 1px solid #ef4444;
+            font-weight: 600;
+        }
+        #message-box-close {
+            background: none;
+            border: none;
+            color: #991b1b;
+            font-size: 1.5rem;
+            position: absolute;
+            top: 0.5rem;
+            right: 1rem;
+            cursor: pointer;
+        }
+        .flex-wrap-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+        .flex-wrap-item {
+            flex: 1 1 calc(50% - 1rem); /* For two items per row on larger screens */
+            max-width: calc(50% - 1rem);
+            min-width: 250px; /* Minimum width for readability */
+        }
+        @media (min-width: 1024px) {
+            .flex-wrap-item {
+                flex: 1 1 calc(33.333% - 1rem); /* For three items per row on large screens */
+                max-width: calc(33.333% - 1rem);
+            }
+        }
+        @media (max-width: 767px) {
+            .flex-wrap-item {
+                flex: 1 1 100%; /* Single item per row on small screens */
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4">
+    <div class="container card p-8 md:p-12 lg:p-16">
+        <h1 class="text-3xl md:text-4xl font-bold text-center mb-6 question-title">🌍 Create Your Own Country! 🗺️</h1>
+        <p class="text-lg text-gray-700 text-center mb-8">Embark on a journey to design your very own sovereign nation. Make choices about its geography, people, and society, and discover the type of government it will have!</p>
+
+        <!-- Custom Message Box -->
+        <div id="message-box" class="hidden">
+            <button id="message-box-close">&times;</button>
+            <p id="message-box-content"></p>
+        </div>
+
+        <!-- Step 1: Country Description Questions -->
+        <div id="step-1" class="space-y-6">
+            <h2 class="text-2xl font-bold text-center mb-6 question-title">Step 1: Describe Your Nation</h2>
+
+            <!-- Country Name -->
+            <div class="mb-6">
+                <label for="countryName" class="block text-xl font-semibold text-gray-800 mb-3 question-title">What will be the name of your new country? 🤔</label>
+                <input type="text" id="countryName" class="input-field" placeholder="E.g., Celestia, Eldoria, Veritas">
+            </div>
+
+            <!-- Geographic Preference -->
+            <div class="mb-6">
+                <h2 class="block text-xl font-semibold text-gray-800 mb-3 question-title">Imagine exploring your country. What kind of landscape would you primarily encounter? 🏞️</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-box" data-category="geography_pref" data-value="Rugged Mountains and Valleys">
+                        <p class="font-medium">🏔️ Rugged Mountains and Valleys</p>
+                        <p class="text-sm text-gray-600">Great for defense, rich in minerals, but challenging for travel.</p>
+                    </div>
+                    <div class="option-box" data-category="geography_pref" data-value="Vast, Flat Plains and Farmlands">
+                        <p class="font-medium">🌾 Vast, Flat Plains and Farmlands</p>
+                        <p class="text-sm text-gray-600">Excellent for agriculture, easy to build infrastructure.</p>
+                    </div>
+                    <div class="option-box" data-category="geography_pref" data-value="Extensive Coastlines and Islands">
+                        <p class="font-medium">🌊 Extensive Coastlines and Islands</p>
+                        <p class="text-sm text-gray-600">Access to trade, fishing, and natural beauty.</p>
+                    </div>
+                    <div class="option-box" data-category="geography_pref" data-value="Dense Forests and Lush Jungles">
+                        <p class="font-medium">🌲 Dense Forests and Lush Jungles</p>
+                        <p class="text-sm text-gray-600">Rich in timber and biodiversity, but challenging for development.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Climate Preference -->
+            <div class="mb-6">
+                <h2 class="block text-xl font-semibold text-gray-800 mb-3 question-title">What kind of weather defines most of your year? ☀️</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-box" data-category="climate_pref" data-value="Distinct Seasons, Moderate Temperatures">
+                        <p class="font-medium">🍂 Distinct Seasons, Moderate Temperatures</p>
+                        <p class="text-sm text-gray-600">Balanced climate for diverse activities.</p>
+                    </div>
+                    <div class="option-box" data-category="climate_pref" data-value="Hot and Humid Year-Round, Abundant Rain">
+                        <p class="font-medium">🌴 Hot and Humid Year-Round, Abundant Rain</p>
+                        <p class="text-sm text-gray-600">Lush vegetation, but can be challenging.</p>
+                    </div>
+                    <div class="option-box" data-category="climate_pref" data-value="Extreme Cold, Ice and Snow">
+                        <p class="font-medium">❄️ Extreme Cold, Ice and Snow</p>
+                        <p class="text-sm text-gray-600">Unique ecosystems, demands resilience.</p>
+                    </div>
+                    <div class="option-box" data-category="climate_pref" data-value="Very Dry, Scant Rainfall, High Temperatures">
+                        <p class="font-medium">🏜️ Very Dry, Scant Rainfall, High Temperatures</p>
+                        <p class="text-sm text-gray-600">Demands ingenuity for water management.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Population Density Preference -->
+            <div class="mb-6">
+                <h2 class="block text-xl font-semibold text-gray-800 mb-3 question-title">How densely populated is your country? 👥</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-box" data-category="population_pref" data-value="Small, Close-Knit Communities">
+                        <p class="font-medium">🚶 Small, Close-Knit Communities</p>
+                        <p class="text-sm text-gray-600">Easier consensus, strong local identity.</p>
+                    </div>
+                    <div class="option-box" data-category="population_pref" data-value="Moderately Populated, Growing Diversity">
+                        <p class="font-medium">👨‍👩‍👧‍👦 Moderately Populated, Growing Diversity</p>
+                        <p class="text-sm text-gray-600">Balance of local and broader interaction.</p>
+                    </div>
+                    <div class="option-box" data-category="population_pref" data-value="Large, Diverse Urban Centers">
+                        <p class="font-medium"> crowd Large, Diverse Urban Centers</p>
+                        <p class="text-sm text-gray-600">Vibrant, complex, requires robust infrastructure.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Societal Values Preference -->
+            <div class="mb-6">
+                <h2 class="block text-xl font-semibold text-gray-800 mb-3 question-title">What values are most emphasized in your society? 🤝</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-box" data-category="values_pref" data-value="Individual Freedom and Rights">
+                        <p class="font-medium">🗽 Individual Freedom and Rights</p>
+                        <p class="text-sm text-gray-600">Citizens prioritize personal liberty and expression.</p>
+                    </div>
+                    <div class="option-box" data-category="values_pref" data-value="Collective Well-being and Unity">
+                        <p class="font-medium">💖 Collective Well-being and Unity</p>
+                        <p class="text-sm text-gray-600">Harmony and cooperation for the greater good.</p>
+                    </div>
+                    <div class="option-box" data-category="values_pref" data-value="Tradition, Stability, and Established Norms">
+                        <p class="font-medium">📜 Tradition, Stability, and Established Norms</p>
+                        <p class="text-sm text-gray-600">Respect for history and a predictable social order.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Natural Resources Multi-Select -->
+            <div class="mb-6">
+                <h2 class="block text-xl font-semibold text-gray-800 mb-3 question-title">What are your country's primary natural resources? (Choose at least 3) 💎</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="option-box multi-select" data-category="resources" data-value="Abundant Fossil Fuels (Oil/Gas)">
+                        <p class="font-medium">⛽ Abundant Fossil Fuels (Oil/Gas)</p>
+                    </div>
+                    <div class="option-box multi-select" data-category="resources" data-value="Rich Mineral Deposits (Gold, Silver, Iron)">
+                        <p class="font-medium">⛏️ Rich Mineral Deposits (Gold, Silver, Iron)</p>
+                    </div>
+                    <div class="option-box multi-select" data-category="resources" data-value="Highly Fertile Arable Land">
+                        <p class="font-medium">🚜 Highly Fertile Arable Land</p>
+                    </div>
+                    <div class="option-box multi-select" data-category="resources" data-value="Extensive Timber Forests">
+                        <p class="font-medium">🌳 Extensive Timber Forests</p>
+                    </div>
+                    <div class="option-box multi-select" data-category="resources" data-value="Plentiful Freshwater Sources (Rivers, Lakes)">
+                        <p class="font-medium">💧 Plentiful Freshwater Sources (Rivers, Lakes)</p>
+                    </div>
+                    <div class="option-box multi-select" data-category="resources" data-value="Thriving Fisheries and Seafood">
+                        <p class="font-medium">🎣 Thriving Fisheries and Seafood</p>
+                    </div>
+                    <div class="option-box multi-select" data-category="resources" data-value="Renewable Energy Potential (Solar, Wind)">
+                        <p class="font-medium">⚡ Renewable Energy Potential (Solar, Wind)</p>
+                    </div>
+                </div>
+                <p id="resource-warning" class="text-red-600 text-sm mt-2 hidden">Please select at least 3 natural resources.</p>
+            </div>
+
+            <!-- Neighboring Countries and Relationship -->
+            <div class="mb-6">
+                <label for="neighboringCountries" class="block text-xl font-semibold text-gray-800 mb-3 question-title">List your neighboring countries (comma-separated): 🤝</label>
+                <input type="text" id="neighboringCountries" class="input-field" placeholder="E.g., Northland, Southwick, East Coastia">
+            </div>
+
+            <div class="mb-6">
+                <h2 class="block text-xl font-semibold text-gray-800 mb-3 question-title">How would you describe your nation's general relationship with its neighbors? 🕊️⚔️</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="option-box" data-category="neighbors_relationship" data-value="Highly Cooperative and Friendly">
+                        <p class="font-medium">🤝 Highly Cooperative and Friendly</p>
+                        <p class="text-sm text-gray-600">Open borders, joint projects, mutual support.</p>
+                    </div>
+                    <div class="option-box" data-category="neighbors_relationship" data-value="Neutral and Primarily Independent">
+                        <p class="font-medium">😐 Neutral and Primarily Independent</p>
+                        <p class="text-sm text-gray-600">Limited direct interaction, focus on internal stability.</p>
+                    </div>
+                    <div class="option-box" data-category="neighbors_relationship" data-value="Often Tense with Occasional Rivalry">
+                        <p class="font-medium">⚔️ Often Tense with Occasional Rivalry</p>
+                        <p class="text-sm text-gray-600">Border security concerns, economic competition.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-center mt-8">
+                <button id="nextStepBtn" class="btn-primary text-xl font-bold">Continue to Government Quiz &rarr;</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Government & Economy Questions -->
+        <div id="step-2" class="hidden space-y-6">
+            <h2 class="text-2xl font-bold text-center mb-6 question-title">Step 2: Design Your Government & Economy</h2>
+            <p class="text-lg text-gray-700 text-center mb-8">Answer these questions to determine the core structures of your nation's governance and economic system.</p>
+
+            <div id="gov-econ-questions" class="space-y-8">
+                <!-- Questions will be dynamically loaded here -->
+            </div>
+
+            <div class="flex justify-center mt-8">
+                <button id="prevStepBtn" class="btn-secondary text-xl font-bold mr-4">&larr; Back to Country Details</button>
+                <button id="generateCountryBtn" class="btn-primary text-xl font-bold">Generate My Country! ✨</button>
+            </div>
+        </div>
+
+
+        <!-- Results Section -->
+        <div id="results-section" class="hidden mt-8">
+            <h2 class="text-3xl font-bold text-center mb-6 question-title">🎉 Your New Country Details! 🎉</h2>
+            <p class="text-lg text-gray-700 text-center mb-8">Here are the assigned characteristics of your country, including its form of government, system, and economy. Use this information to create your poster!</p>
+
+            <div class="space-y-4">
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Country Name:</span>
+                    <span id="resultCountryName" class="text-gray-700"></span>
+                </div>
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Primary Geographic Landscape:</span>
+                    <span id="resultGeography" class="text-gray-700"></span>
+                </div>
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Dominant Climate:</span>
+                    <span id="resultClimate" class="text-gray-700"></span>
+                </div>
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Population Density:</span>
+                    <span id="resultPopulation" class="text-gray-700"></span>
+                </div>
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Primary Societal Values:</span>
+                    <span id="resultValues" class="text-gray-700"></span>
+                </div>
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Natural Resources:</span>
+                    <span id="resultResources" class="text-gray-700"></span>
+                </div>
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Neighboring Countries:</span>
+                    <span id="resultNeighboringCountries" class="text-gray-700"></span>
+                </div>
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Relationship with Neighbors:</span>
+                    <span id="resultNeighborsRelationship" class="text-gray-700"></span>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t-2 border-blue-200 space-y-4">
+                <h3 class="text-2xl font-bold text-center mb-4 question-title">Government & Economy Assignments 🗳️💰</h3>
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Form of Government:</span>
+                    <span id="resultFormOfGovernment" class="text-blue-600 font-bold"></span>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-lg mt-2">
+                    <p class="text-sm text-gray-800 leading-relaxed" id="form-gov-details"></p>
+                </div>
+
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">System of Government:</span>
+                    <span id="resultSystemOfGovernment" class="text-blue-600 font-bold"></span>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-lg mt-2">
+                    <p class="text-sm text-gray-800 leading-relaxed" id="system-gov-details"></p>
+                </div>
+
+                <div class="result-item">
+                    <span class="font-semibold text-gray-800">Economic System:</span>
+                    <span id="resultEconomicSystem" class="text-blue-600 font-bold"></span>
+                </div>
+                <div class="p-4 bg-blue-50 rounded-lg mt-2">
+                    <p class="text-sm text-gray-800 leading-relaxed" id="economy-sys-details"></p>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-2xl font-bold text-center mb-4 question-title">Reflection Prompts for Your Poster 📝</h3>
+                <p class="text-gray-700 mb-4">Consider these questions as you develop your poster. Your answers will help explain your country's unique situation:</p>
+                <ul class="list-disc list-inside text-gray-700 space-y-2">
+                    <li>How do leaders become leaders in your assigned form of government?</li>
+                    <li>Who makes the decisions in your government?</li>
+                    <li>How are the people’s views taken into account?</li>
+                    <li>What is one benefit of your country’s government structure?</li>
+                    <li>What is one drawback of your country’s government structure?</li>
+                    <li>How does your assigned economic system influence daily life for citizens?</li>
+                    <li>What would living in this country be like (1-2 sentences)?</li>
+                    <li>**Why did you choose your specific form of government/system/economic system through your quiz answers, and why might other options not work well for your country?** (This connects to the "Written Explanations" part of the original assignment.)</li>
+                </ul>
+            </div>
+
+            <div class="flex justify-center mt-8">
+                <button id="resetBtn" class="btn-secondary text-xl font-bold">Start Over ↩️</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data parsed from "Forms of Gov Table" document
+        const governmentDetails = {
+            "Monarchy": {
+                definition: "A system of government in which a single ruler exercises supreme power based on heredity or divine right.",
+                pros: "Efficient way of carrying out decisions and policies; clear line of succession; loyalty to monarch as unifying power.",
+                cons: "Quality of leadership can vary dramatically from one generation to the next; job of running modern nation-state has become too big for any but the most exceptional monarchs to do well."
+            },
+            "Dictatorship": {
+                definition: "A system of government in which a single person or group exercises supreme power based on its control of the military and police.",
+                pros: "Power centralized in the hands of a single military or political leader who can get things done efficiently; control of the military and police allows dictator to maintain peace and order.",
+                cons: "Power can be used to abuse citizens who oppose the dictator; dictators face serious legitimacy problems."
+            },
+            "Theocracy": {
+                definition: "A system of government headed by religious leaders.",
+                pros: "Single, state-supported religion encourages political and social unity; ensures that political decisions are in line with the people's moral values and beliefs.",
+                cons: "Difficult to enforce religious unity; religious minorities often marginalized or even persecuted."
+            },
+            "Single-Party State": {
+                definition: "A system of government in which only one political party is allowed by the constitution to govern, and power is exercised by the leading members of the party.",
+                pros: "Easier to pass laws by avoiding the political wrangling common in multiparty states.",
+                cons: "The views of the party elite may differ from the interests of the people as a whole, leading to social unrest; people with differing political views are often shut out of the political process."
+            },
+            "Direct Democracy": {
+                definition: "A system of government in which public decisions are made directly by citizens meeting together in an assembly or voting by ballot.",
+                pros: "Each citizen has an equal say in public affairs; decisions have widespread support.",
+                cons: "Very time-consuming for citizens."
+            },
+            "Parliamentary Democracy": {
+                definition: "A system of government in which voters elect lawmakers to represent them in the nation's parliament; the leaders of the executive branch come from the ruling party in parliament.",
+                pros: "Members of the legislative majority usually vote with the prime minister on key issues, making it easier to get legislation passed.",
+                cons: "No clear-cut separation between the executive and legislative, so no real check on the prime minister's powers; prime minister can be forced to resign, leading to instability."
+            },
+            "Presidential Democracy": {
+                definition: "A system of government in which voters elect lawmakers to represent them in the legislature and a president to lead the government as head of the executive branch.",
+                pros: "President may be more responsive to the public than to party concerns; separation of executive and legislative powers allows each branch to watch over the other to prevent abuses of power; fixed terms of office creates stability.",
+                cons: "No easy way to remove an unpopular president from power; gridlock may result when a president is not from the party that controls the legislature."
+            }
+        };
+
+        const systemDetails = {
+            "Unitary system": {
+                definition: "A system of government in which power is centralized in the national government; regional governments only exercise powers given by national government.",
+                pros: "Promotes national unity; all parts of the country follow the same laws and policies.",
+                cons: "Broad public policies may not fit the needs of the entire country or population; central government officials cannot know the needs of every locality."
+            },
+            "Federal system": {
+                definition: "A system of government in which power is divided between national and regional governments.",
+                pros: "Works well for large, diverse countries; gives regional governments flexibility in meeting diverse needs.",
+                cons: "Patchwork of conflicting or competing laws from region to region; may foster conflict between central and regional governments."
+            },
+            "Confederal system": {
+                definition: "A system of government in which power resides in the regions, which are independent states; the central government gets power from regional governments.",
+                pros: "Allows regional governments to unite for some purposes without giving up the power to run their own affairs; gives regional governments flexibility to meet local needs; prevents rise of an authoritarian central government.",
+                cons: "Central government may be too weak to meet the needs of the nation as a whole; may lead to conflict between regions."
+            }
+        };
+
+        const economyDetails = {
+            "Traditional economy": {
+                definition: "An economic system in which decisions about what goods and services to produce and how are made on the basis of tradition.",
+                pros: "Tradition and community values keep the economy running smoothly; people can provide for themselves.",
+                cons: "Very low standard of living; limited access to goods and services."
+            },
+            "Market economy": {
+                definition: "An economic system that relies mainly on markets to determine what goods and services to produce and how.",
+                pros: "Efficient at meeting people's needs, based on demand; competition keeps prices from rising too high; business investment helps the economy grow.",
+                cons: "Instability, periods of growth usually alternate with recessions; unequal distribution of wealth."
+            },
+            "Command economy": {
+                definition: "An economic system that relies mainly on the central government to determine what goods and services to produce and how.",
+                pros: "Can ensure full employment; can control prices and bring stability to the economy; distributes income more equally.",
+                cons: "Workers have little incentive to work hard or to produce quality goods; government planners are less efficient than the market at making economic decisions."
+            }
+        };
+
+        // Questions for Government and Economy determination
+        const govEconQuestions = [
+            {
+                id: "q1",
+                question: "How do you envision the primary leader(s) of your country coming to power?",
+                options: [
+                    { text: "Through a clear line of hereditary succession or divine appointment.", weights: { monarchy: 3, theocracy: 1 } },
+                    { text: "By demonstrating absolute control over the military and police force.", weights: { dictatorship: 3, singlePartyState: 2 } },
+                    { text: "Chosen by the will of the people in free and fair elections, where the executive is separate from the legislature.", weights: { presidentialDemocracy: 3, federal: 1, marketEconomy: 1 } },
+                    { text: "Elected by the people, and then the head of government is selected from the ruling party in the legislature.", weights: { parliamentaryDemocracy: 3, unitary: 1, marketEconomy: 1 } },
+                    { text: "Directly by a popular vote of all citizens on key issues.", weights: { directDemocracy: 3, marketEconomy: 1 } },
+                    { text: "Through their position as a religious authority.", weights: { theocracy: 3, monarchy: 1 } },
+                    { text: "By ascending through the ranks of a single, dominant political party.", weights: { singlePartyState: 3, dictatorship: 1, commandEconomy: 1 } }
+                ]
+            },
+            {
+                id: "q2",
+                question: "Where should the majority of governing power reside?",
+                options: [
+                    { text: "Concentrated in a strong national (central) government.", weights: { unitary: 3, monarchy: 1, dictatorship: 1, singlePartyState: 1, commandEconomy: 2 } },
+                    { text: "Divided between national and regional governments, each with significant authority.", weights: { federal: 3, presidentialDemocracy: 1, parliamentaryDemocracy: 1, marketEconomy: 2 } },
+                    { text: "Primarily with independent regional states, with a very weak central coordinating body.", weights: { confederal: 3, traditionalEconomy: 2 } }
+                ]
+            },
+            {
+                id: "q3",
+                question: "What is the most important role of the government in the economy?",
+                options: [
+                    { text: "To plan and control all aspects of production and distribution to ensure equality and stability.", weights: { commandEconomy: 3, singlePartyState: 1, dictatorship: 1 } },
+                    { text: "To allow free markets and private enterprise to flourish with minimal intervention.", weights: { marketEconomy: 3, presidentialDemocracy: 1, parliamentaryDemocracy: 1, directDemocracy: 1 } },
+                    { text: "To maintain traditional practices and ensure community self-sufficiency.", weights: { traditionalEconomy: 3, theocracy: 1 } }
+                ]
+            },
+            {
+                id: "q4",
+                question: "How much direct influence should ordinary citizens have in making public laws and decisions?",
+                options: [
+                    { text: "Very high: citizens directly vote on most important laws and policies.", weights: { directDemocracy: 3 } },
+                    { text: "Moderate: citizens elect representatives who make decisions on their behalf.", weights: { parliamentaryDemocracy: 2, presidentialDemocracy: 2, federal: 1, unitary: 1, marketEconomy: 1 } },
+                    { text: "Low: citizens have little to no direct say, trusting leaders to make decisions.", weights: { monarchy: 2, dictatorship: 2, theocracy: 2, singlePartyState: 2, commandEconomy: 1, traditionalEconomy: 1 } }
+                ]
+            },
+            {
+                id: "q5",
+                question: "What is the highest priority for your nation's social and political order?",
+                options: [
+                    { text: "Ensuring stability, national unity, and consistent laws across all regions.", weights: { unitary: 2, monarchy: 1, dictatorship: 1, singlePartyState: 1, commandEconomy: 1 } },
+                    { text: "Protecting individual liberties and providing flexibility for diverse regional needs.", weights: { federal: 2, presidentialDemocracy: 1, parliamentaryDemocracy: 1, marketEconomy: 1 } },
+                    { text: "Maintaining strong community values and established customs.", weights: { traditionalEconomy: 2, theocracy: 1, confederal: 1 } },
+                    { text: "Rapid, efficient decision-making to address challenges without hindrance.", weights: { dictatorship: 2, monarchy: 1, singlePartyState: 1, commandEconomy: 1 } }
+                ]
+            },
+            {
+                id: "q6",
+                question: "If there is social or political dissent, how should the government respond?",
+                options: [
+                    { text: "Suppress it swiftly and forcefully to maintain order.", weights: { dictatorship: 3, singlePartyState: 2, commandEconomy: 1 } },
+                    { text: "Address grievances through public debate and legislative action.", weights: { parliamentaryDemocracy: 2, presidentialDemocracy: 2, directDemocracy: 2, federal: 1, marketEconomy: 1 } },
+                    { text: "Consult religious or traditional elders for guidance and resolution.", weights: { theocracy: 2, traditionalEconomy: 2, monarchy: 1 } },
+                    { text: "Maintain a firm stance, emphasizing obedience to the established leadership.", weights: { monarchy: 2, singlePartyState: 2, unitary: 1 } }
+                ]
+            },
+            {
+                id: "q7",
+                question: "Who should be responsible for providing essential goods and services (e.g., healthcare, education, housing) to the citizens?",
+                options: [
+                    { text: "Primarily the central government, ensuring equal access for all.", weights: { commandEconomy: 3, singlePartyState: 2, unitary: 1 } },
+                    { text: "A mix of private businesses and government programs, often managed regionally.", weights: { marketEconomy: 3, federal: 2, presidentialDemocracy: 1, parliamentaryDemocracy: 1 } },
+                    { text: "Families and local communities, relying on traditional support networks.", weights: { traditionalEconomy: 3, confederal: 2 } }
+                ]
+            },
+            {
+                id: "q8",
+                question: "In times of national crisis, what kind of leadership is most effective?",
+                options: [
+                    { text: "A single, decisive leader with unchallenged authority.", weights: { dictatorship: 2, monarchy: 2, singlePartyState: 2, unitary: 1, commandEconomy: 1 } },
+                    { text: "A strong, unified legislative body capable of swift lawmaking.", weights: { parliamentaryDemocracy: 2, unitary: 1 } },
+                    { text: "A robust executive (president) working with legislative oversight.", weights: { presidentialDemocracy: 2, federal: 1 } },
+                    { text: "Community-led initiatives guided by traditional wisdom.", weights: { traditionalEconomy: 1, confederal: 1 } }
+                ]
+            },
+            {
+                id: "q9",
+                question: "What is your country's stance on religious freedom and its role in governance?",
+                options: [
+                    { text: "A single, state-supported religion is essential for national unity and moral guidance.", weights: { theocracy: 3, monarchy: 1, singlePartyState: 1 } },
+                    { text: "Religious freedom for all citizens, with a clear separation of church and state.", weights: { presidentialDemocracy: 2, parliamentaryDemocracy: 2, directDemocracy: 2, federal: 1, marketEconomy: 1 } },
+                    { text: "Religion plays an influential role in society but does not directly control government decisions.", weights: { traditionalEconomy: 2, unitary: 1 } }
+                ]
+            },
+            {
+                id: "q10",
+                question: "How should power be checked and balanced within the government?",
+                options: [
+                    { text: "Power should be centralized for efficiency, with minimal internal checks.", weights: { dictatorship: 2, singlePartyState: 2, unitary: 1, commandEconomy: 1 } },
+                    { text: "By an independent judiciary and a separate legislative branch overseeing the executive.", weights: { presidentialDemocracy: 3, federal: 2, marketEconomy: 1 } },
+                    { text: "The legislative majority (parliament) holds significant power, with the executive emerging from it.", weights: { parliamentaryDemocracy: 2, unitary: 1 } },
+                    { text: "Through the direct involvement of citizens in public assemblies and voting.", weights: { directDemocracy: 2 } }
+                ]
+            }
+        ];
+
+
+        // Elements
+        const step1Section = document.getElementById('step-1');
+        const step2Section = document.getElementById('step-2');
+        const resultsSection = document.getElementById('results-section');
+        const nextStepBtn = document.getElementById('nextStepBtn');
+        const prevStepBtn = document.getElementById('prevStepBtn');
+        const generateCountryBtn = document.getElementById('generateCountryBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const countryNameInput = document.getElementById('countryName');
+        const resourceWarning = document.getElementById('resource-warning');
+        const govEconQuestionsContainer = document.getElementById('gov-econ-questions');
+
+        // Custom Message Box Elements
+        const messageBox = document.getElementById('message-box');
+        const messageBoxContent = document.getElementById('message-box-content');
+        const messageBoxClose = document.getElementById('message-box-close');
+
+        let currentStep = 0; // 0: Country Details, 1: Gov/Econ Questions, 2: Results
+        let selectedCountryOptions = {}; // Stores selections for single-choice categories (Step 1)
+        let selectedResources = []; // Stores selections for multi-choice resources (Step 1)
+        let selectedGovEconAnswers = {}; // Stores answers for Step 2 questions
+
+
+        // --- Custom Message Box Functions ---
+        function showMessage(message) {
+            messageBoxContent.textContent = message;
+            messageBox.classList.remove('hidden');
+        }
+
+        function hideMessage() {
+            messageBox.classList.add('hidden');
+        }
+
+        messageBoxClose.addEventListener('click', hideMessage);
+
+
+        // --- Step 1: Country Description Logic ---
+        document.querySelectorAll('#step-1 .option-box').forEach(box => {
+            box.addEventListener('click', () => {
+                const category = box.dataset.category;
+                const value = box.dataset.value;
+
+                if (box.classList.contains('multi-select')) {
+                    if (selectedResources.includes(value)) {
+                        selectedResources = selectedResources.filter(item => item !== value);
+                        box.classList.remove('selected');
+                    } else {
+                        selectedResources.push(value);
+                        box.classList.add('selected');
+                    }
+                    if (selectedResources.length >= 3) {
+                        resourceWarning.classList.add('hidden');
+                    } else {
+                        resourceWarning.classList.remove('hidden');
+                    }
+                } else {
+                    document.querySelectorAll(`#step-1 .option-box[data-category="${category}"]`).forEach(otherBox => {
+                        if (otherBox !== box) {
+                            otherBox.classList.remove('selected');
+                        }
+                    });
+                    box.classList.toggle('selected');
+                    if (box.classList.contains('selected')) {
+                        selectedCountryOptions[category] = value;
+                    } else {
+                        delete selectedCountryOptions[category];
+                    }
+                }
+            });
+        });
+
+        nextStepBtn.addEventListener('click', () => {
+            const countryName = countryNameInput.value.trim();
+            if (!countryName) {
+                showMessage("Please enter a country name.");
+                return;
+            }
+
+            const requiredCategories = ['geography_pref', 'climate_pref', 'population_pref', 'values_pref', 'neighbors_relationship'];
+            for (const category of requiredCategories) {
+                if (!selectedCountryOptions[category]) {
+                    showMessage(`Please select an option for ${category.replace(/_pref/g, '').replace(/_/g, ' ')}.`);
+                    return;
+                }
+            }
+
+            if (selectedResources.length < 3) {
+                resourceWarning.classList.remove('hidden');
+                showMessage("Please select at least 3 natural resources.");
+                return;
+            } else {
+                resourceWarning.classList.add('hidden');
+            }
+
+            // Save neighboring countries text
+            selectedCountryOptions['neighboringCountries'] = document.getElementById('neighboringCountries').value || 'None specified';
+
+
+            // Transition to Step 2
+            step1Section.classList.add('hidden');
+            step2Section.classList.remove('hidden');
+            currentStep = 1;
+            loadGovEconQuestions();
+        });
+
+
+        // --- Step 2: Government & Economy Quiz Logic ---
+        function loadGovEconQuestions() {
+            govEconQuestionsContainer.innerHTML = ''; // Clear previous questions
+            govEconQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('mb-8', 'p-6', 'bg-gray-50', 'rounded-lg', 'shadow-sm');
+                questionDiv.innerHTML = `
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4 question-title">${index + 1}. ${q.question}</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="options-${q.id}">
+                        ${q.options.map((option, optIndex) => `
+                            <div class="option-box flex-wrap-item" data-question="${q.id}" data-value="${option.text}">
+                                <p class="font-medium">${option.text}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                govEconQuestionsContainer.appendChild(questionDiv);
+            });
+
+            // Add event listeners for new option boxes
+            document.querySelectorAll('#gov-econ-questions .option-box').forEach(box => {
+                box.addEventListener('click', () => {
+                    const questionId = box.dataset.question;
+                    const value = box.dataset.value;
+
+                    // Remove 'selected' from previously selected box for this question
+                    document.querySelectorAll(`.option-box[data-question="${questionId}"]`).forEach(otherBox => {
+                        if (otherBox !== box) {
+                            otherBox.classList.remove('selected');
+                        }
+                    });
+                    box.classList.toggle('selected');
+                    if (box.classList.contains('selected')) {
+                        selectedGovEconAnswers[questionId] = value;
+                    } else {
+                        delete selectedGovEconAnswers[questionId];
+                    }
+                });
+            });
+
+            // Pre-select answers if returning from results
+            for (const qId in selectedGovEconAnswers) {
+                const selectedBox = document.querySelector(`.option-box[data-question="${qId}"][data-value="${selectedGovEconAnswers[qId]}"]`);
+                if (selectedBox) {
+                    selectedBox.classList.add('selected');
+                }
+            }
+        }
+
+        prevStepBtn.addEventListener('click', () => {
+            step2Section.classList.add('hidden');
+            step1Section.classList.remove('hidden');
+            currentStep = 0;
+        });
+
+        generateCountryBtn.addEventListener('click', () => {
+            // Validate all government/economy questions are answered
+            if (Object.keys(selectedGovEconAnswers).length !== govEconQuestions.length) {
+                showMessage("Please answer all government and economy questions.");
+                return;
+            }
+
+            // --- Determine Government Form, System, and Economic System based on answers ---
+            const scores = {
+                // Government Forms
+                monarchy: 0, dictatorship: 0, theocracy: 0, singlePartyState: 0,
+                directDemocracy: 0, parliamentaryDemocracy: 0, presidentialDemocracy: 0,
+                // Government Systems
+                unitary: 0, federal: 0, confederal: 0,
+                // Economic Systems
+                traditionalEconomy: 0, marketEconomy: 0, commandEconomy: 0
+            };
+
+            for (const qId in selectedGovEconAnswers) {
+                const question = govEconQuestions.find(q => q.id === qId);
+                const selectedOption = question.options.find(opt => opt.text === selectedGovEconAnswers[qId]);
+                if (selectedOption && selectedOption.weights) {
+                    for (const type in selectedOption.weights) {
+                        scores[type] += selectedOption.weights[type];
+                    }
+                }
+            }
+
+            // Function to find the type with the highest score
+            const findHighestScore = (types) => {
+                let maxScore = -1;
+                let assignedType = null;
+                for (const type of types) {
+                    if (scores[type] > maxScore) {
+                        maxScore = scores[type];
+                        assignedType = type;
+                    }
+                }
+                return assignedType;
+            };
+
+            const assignedFormOfGovernment = findHighestScore([
+                "monarchy", "dictatorship", "theocracy", "singlePartyState",
+                "directDemocracy", "parliamentaryDemocracy", "presidentialDemocracy"
+            ]);
+            const assignedSystemOfGovernment = findHighestScore([
+                "unitary", "federal", "confederal"
+            ]);
+            const assignedEconomicSystem = findHighestScore([
+                "traditionalEconomy", "marketEconomy", "commandEconomy"
+            ]);
+
+            // Map internal names to display names
+            const displayForms = {
+                monarchy: "Monarchy",
+                dictatorship: "Dictatorship",
+                theocracy: "Theocracy",
+                singlePartyState: "Single-Party State",
+                directDemocracy: "Direct Democracy",
+                parliamentaryDemocracy: "Parliamentary Democracy",
+                presidentialDemocracy: "Presidential Democracy"
+            };
+            const displaySystems = {
+                unitary: "Unitary system",
+                federal: "Federal system",
+                confederal: "Confederal system"
+            };
+            const displayEconomies = {
+                traditionalEconomy: "Traditional economy",
+                marketEconomy: "Market economy",
+                commandEconomy: "Command economy"
+            };
+
+            // Populate results
+            document.getElementById('resultCountryName').textContent = countryNameInput.value;
+            document.getElementById('resultGeography').textContent = selectedCountryOptions.geography_pref;
+            document.getElementById('resultClimate').textContent = selectedCountryOptions.climate_pref;
+            document.getElementById('resultPopulation').textContent = selectedCountryOptions.population_pref;
+            document.getElementById('resultValues').textContent = selectedCountryOptions.values_pref;
+            document.getElementById('resultResources').textContent = selectedResources.join(', ');
+            document.getElementById('resultNeighboringCountries').textContent = selectedCountryOptions.neighboringCountries;
+            document.getElementById('resultNeighborsRelationship').textContent = selectedCountryOptions.neighbors_relationship;
+
+            // Display assigned government and economic systems
+            const finalFormGov = displayForms[assignedFormOfGovernment] || "Undetermined";
+            const finalSystemGov = displaySystems[assignedSystemOfGovernment] || "Undetermined";
+            const finalEconomicSys = displayEconomies[assignedEconomicSystem] || "Undetermined";
+
+            document.getElementById('resultFormOfGovernment').textContent = finalFormGov;
+            document.getElementById('resultSystemOfGovernment').textContent = finalSystemGov;
+            document.getElementById('resultEconomicSystem').textContent = finalEconomicSys;
+
+            // Add definitions, pros, and cons
+            const getDetailsHtml = (type, detailsMap) => {
+                const info = detailsMap[type];
+                if (!info) return "Details not available.";
+                return `
+                    <strong>Definition:</strong> ${info.definition}<br><br>
+                    <strong>Pros:</strong> ${info.pros}<br><br>
+                    <strong>Cons:</strong> ${info.cons}
+                `;
+            };
+
+            document.getElementById('form-gov-details').innerHTML = getDetailsHtml(finalFormGov, governmentDetails);
+            document.getElementById('system-gov-details').innerHTML = getDetailsHtml(finalSystemGov, systemDetails);
+            document.getElementById('economy-sys-details').innerHTML = getDetailsHtml(finalEconomicSys, economyDetails);
+
+            step2Section.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            currentStep = 2;
+        });
+
+        // --- Reset Logic ---
+        resetBtn.addEventListener('click', () => {
+            // Clear inputs and selections
+            countryNameInput.value = '';
+            document.getElementById('neighboringCountries').value = '';
+            document.querySelectorAll('.option-box').forEach(box => {
+                box.classList.remove('selected');
+            });
+            selectedCountryOptions = {};
+            selectedResources = [];
+            selectedGovEconAnswers = {};
+            resourceWarning.classList.add('hidden');
+            hideMessage(); // Hide any active messages
+
+            // Show step 1, hide others
+            resultsSection.classList.add('hidden');
+            step2Section.classList.add('hidden');
+            step1Section.classList.remove('hidden');
+            currentStep = 0;
+            govEconQuestionsContainer.innerHTML = ''; // Clear questions from Step 2
+        });
+    </script>
+</body>
+</html>
